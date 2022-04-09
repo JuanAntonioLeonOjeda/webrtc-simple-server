@@ -1,18 +1,11 @@
-var app = require('express')();
-var cors = require('cors');
 var server = require('http').Server(app);
-var io = require('socket.io')(server, { origins: '*:*' });
+var io = require('socket.io')(server, { cors: {origin:'https://peek-beats.netlify.app' }});
 const PORT = process.env.PORT || 3000
-app.use(cors())
 
 var room = {};
 
 server.listen(PORT);
 // WARNING: app.listen(80) will NOT work here!
-
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/index.html');
-});
 
 io.on('connection', function(socket) {
     console.log(socket.id + ' had connected')
