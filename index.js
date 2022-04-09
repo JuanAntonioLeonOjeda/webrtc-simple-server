@@ -1,6 +1,9 @@
+const app = require('express')()
+var cors = require('cors')
 var server = require('http').Server(app);
 var io = require('socket.io')(server, { cors: {origin:'https://peek-beats.netlify.app' }});
 const PORT = process.env.PORT || 3000
+app.use(cors())
 
 var room = {};
 
