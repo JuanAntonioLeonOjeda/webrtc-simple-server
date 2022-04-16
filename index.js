@@ -37,6 +37,10 @@ io.sockets.on("connection", socket => {
     console.log('on candidate')
     socket.to(id).emit("candidate", socket.id, message);
   });
+  socket.on('join-room', (roomId, userId) => {
+    socket.join(roomId)
+    socket.to(roomId).emit('user-connected', userId)
+  })
 });
 
 // WARNING: app.listen(80) will NOT work here!
