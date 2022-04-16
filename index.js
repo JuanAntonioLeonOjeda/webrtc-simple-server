@@ -1,45 +1,51 @@
 const app = require('express')()
 var cors = require('cors')
 var server = require('http').Server(app);
-var io = require('socket.io')(server, { cors: {origin:'https://deft-jelly-5f3d79.netlify.app' }});
+var io = require('socket.io')(server, { cors: {origin:'http://localhost:3000' }});
 const PORT = process.env.PORT || 5050
 app.use(cors())
-
+// { cors: {origin:'https://deft-jelly-5f3d79.netlify.app' }
 var room = {};
 
 server.listen(PORT);
 
-let broadcaster
-
 io.sockets.on("connection", socket => {
-  socket.on("broadcaster", () => {
-      console.log('on broadcaster')
-    broadcaster = socket.id;
-    socket.broadcast.emit("broadcaster");
-  });
-  socket.on("watcher", () => {
-    console.log('on watcher')
-    socket.to(broadcaster).emit("watcher", socket.id);
-  });
-  socket.on("disconnect", () => {
-    console.log('on disconnect')
-    socket.to(broadcaster).emit("disconnectPeer", socket.id);
-  });
-  socket.on("offer", (id, message) => {
-    console.log('on offer')
-      socket.to(id).emit("offer", socket.id, message);
-  });
-  socket.on("answer", (id, message) => {
-    console.log('on answer')
-    socket.to(id).emit("answer", socket.id, message);
-  });
-  socket.on("candidate", (id, message) => {
-    console.log('on candidate')
-    socket.to(id).emit("candidate", socket.id, message);
-  });
   socket.on('join-room', (roomId, userId) => {
+
     socket.join(roomId)
+    console.log(`${userId} connected to room ${roomId}`)
     socket.to(roomId).emit('user-connected', userId)
+
+    socket.on("broadcaster", () => {
+      console.log('on broadcaster')
+      socket.to(roomId).broadcast.emit("broadcaster");
+    });
+
+    socket.on("watcher", () => {
+      console.log('on watcher')
+      socket.to(roomId).emit("watcher", socket.id);
+    });
+
+    socket.on("disconnect", () => {
+      console.log('on disconnect')
+      socket.leave(roomId)
+      socket.to(roomId).emit("disconnectPeer", socket.id);
+    });
+
+    socket.on("offer", (id, message) => {
+      console.log('on offer')
+        socket.to(id).emit("offer", socket.id, message);
+    });
+
+    socket.on("answer", (id, message) => {
+      console.log('on answer')
+      socket.to(id).emit("answer", socket.id, message);
+    });
+
+    socket.on("candidate", (id, message) => {
+      console.log('on candidate')
+      socket.to(id).emit("candidate", socket.id, message);
+    });
   })
 });
 
@@ -106,4 +112,38 @@ io.sockets.on("connection", socket => {
 //         }
 //         console.log(room)
 //     })
+// });
+
+// let broadcaster
+
+// io.sockets.on("connection", socket => {
+//   socket.on("broadcaster", () => {
+//       console.log('on broadcaster')
+//     broadcaster = socket.id;
+//     socket.broadcast.emit("broadcaster");
+//   });
+//   socket.on("watcher", () => {
+//     console.log('on watcher')
+//     socket.to(broadcaster).emit("watcher", socket.id);
+//   });
+//   socket.on("disconnect", () => {
+//     console.log('on disconnect')
+//     socket.to(broadcaster).emit("disconnectPeer", socket.id);
+//   });
+//   socket.on("offer", (id, message) => {
+//     console.log('on offer')
+//       socket.to(id).emit("offer", socket.id, message);
+//   });
+//   socket.on("answer", (id, message) => {
+//     console.log('on answer')
+//     socket.to(id).emit("answer", socket.id, message);
+//   });
+//   socket.on("candidate", (id, message) => {
+//     console.log('on candidate')
+//     socket.to(id).emit("candidate", socket.id, message);
+//   });
+//   socket.on('join-room', (roomId, userId) => {
+//     socket.join(roomId)
+//     socket.to(roomId).emit('user-connected', userId)
+//   })
 // });
