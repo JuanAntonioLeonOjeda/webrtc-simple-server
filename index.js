@@ -1,8 +1,8 @@
 const app = require('express')()
 var cors = require('cors')
 var server = require('http').Server(app);
-var io = require('socket.io')(server, { cors: {origin:'https://peek-beats.netlify.app' }});
-const PORT = process.env.PORT || 3000
+var io = require('socket.io')(server, { cors: {origin:'http://localhost:3000' }});
+const PORT = process.env.PORT || 5050
 app.use(cors())
 
 var room = {};
@@ -13,26 +13,32 @@ let broadcaster
 
 io.sockets.on("connection", socket => {
   socket.on("broadcaster", () => {
+      console.log('on broadcaster')
     broadcaster = socket.id;
     socket.broadcast.emit("broadcaster");
   });
   socket.on("watcher", () => {
+    console.log('on watcher')
     socket.to(broadcaster).emit("watcher", socket.id);
   });
   socket.on("disconnect", () => {
+    console.log('on disconnect')
     socket.to(broadcaster).emit("disconnectPeer", socket.id);
+  });
+  socket.on("offer", (id, message) => {
+    console.log('on offer')
+      socket.to(id).emit("offer", socket.id, message);
+  });
+  socket.on("answer", (id, message) => {
+    console.log('on answer')
+    socket.to(id).emit("answer", socket.id, message);
+  });
+  socket.on("candidate", (id, message) => {
+    console.log('on candidate')
+    socket.to(id).emit("candidate", socket.id, message);
   });
 });
 
-socket.on("offer", (id, message) => {
-    socket.to(id).emit("offer", socket.id, message);
-});
-socket.on("answer", (id, message) => {
-  socket.to(id).emit("answer", socket.id, message);
-});
-socket.on("candidate", (id, message) => {
-  socket.to(id).emit("candidate", socket.id, message);
-});
 // WARNING: app.listen(80) will NOT work here!
 
 // io.on('connection', function(socket) {
