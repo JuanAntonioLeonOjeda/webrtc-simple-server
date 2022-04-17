@@ -1,16 +1,20 @@
 const app = require('express')()
 var cors = require('cors')
 var server = require('http').Server(app);
-var io = require('socket.io')(server, { cors: {origin:'https://deft-jelly-5f3d79.netlify.app' }});
+var io = require('socket.io')(server, { cors: {origin:'http://localhost:3000' }});
 const PORT = process.env.PORT || 5050
 app.use(cors())
 // { cors: {origin:'https://deft-jelly-5f3d79.netlify.app' }
-var room = {};
 
 server.listen(PORT);
 
+let broadcasters = {}
+
 io.sockets.on("connection", socket => {
+  let room
   socket.on('join-room', (roomId, userId) => {
+    room = roomId
+    console.log(`${userId} connected with socket id ${socket.id}`)
 
     socket.join(roomId)
     console.log(`${userId} connected to room ${roomId}`)
@@ -18,23 +22,19 @@ io.sockets.on("connection", socket => {
 
     socket.on("broadcaster", () => {
       console.log('on broadcaster')
+      broadcasters[room] = socket.id
+      console.log(broadcasters)
       socket.to(roomId).broadcast.emit("broadcaster");
     });
 
     socket.on("watcher", () => {
       console.log('on watcher')
-      socket.to(roomId).emit("watcher", socket.id);
-    });
-
-    socket.on("disconnect", () => {
-      console.log('on disconnect')
-      socket.leave(roomId)
-      socket.to(roomId).emit("disconnectPeer", socket.id);
+      socket.to(broadcasters[room]).emit("watcher", socket.id);
     });
 
     socket.on("offer", (id, message) => {
       console.log('on offer')
-        socket.to(id).emit("offer", socket.id, message);
+      socket.to(id).emit("offer", socket.id, message);
     });
 
     socket.on("answer", (id, message) => {
@@ -47,6 +47,14 @@ io.sockets.on("connection", socket => {
       socket.to(id).emit("candidate", socket.id, message);
     });
   })
+
+  socket.on("disconnect", () => {
+    console.log('on disconnect')
+    socket.leave(room)
+    socket.to(room).emit("disconnectPeer", socket.id)
+    room = ''
+  });
+
 });
 
 // WARNING: app.listen(80) will NOT work here!
