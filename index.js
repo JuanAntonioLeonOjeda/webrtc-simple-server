@@ -56,6 +56,7 @@ io.sockets.on("connection", socket => {
     console.log('on disconnect')
     socket.leave(room)
     socket.to(room).emit("disconnectPeer", socket.id)
+    delete broadcasters[room]
     room = ''
   });
 
