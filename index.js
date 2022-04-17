@@ -1,7 +1,7 @@
 const app = require('express')()
 var cors = require('cors')
 var server = require('http').Server(app);
-var io = require('socket.io')(server, { cors: {origin:'https://deft-jelly-5f3d79.netlify.app' }});
+var io = require('socket.io')(server, { cors: {origin:'http://localhost:3000' }});
 const PORT = process.env.PORT || 5050
 app.use(cors())
 // { cors: {origin:'https://deft-jelly-5f3d79.netlify.app' }
@@ -46,6 +46,10 @@ io.sockets.on("connection", socket => {
       console.log('on candidate')
       socket.to(id).emit("candidate", socket.id, message);
     });
+
+    socket.on('chat-message', (message) => {
+      io.to(room).emit('chat-message', message)
+    })
   })
 
   socket.on("disconnect", () => {
